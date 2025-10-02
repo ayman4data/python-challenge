@@ -1,11 +1,13 @@
 from flask import Flask, jsonify, request, render_template
 import json
 import os
+import re
 from datetime import datetime
+from collections import Counter
 
 app = Flask(__name__)
 
-# Sample data (same as before)
+# Sample data
 sample_data = {
     "name": "Thirty Days of Python Challenge",
     "description": "A 30-day programming challenge to learn Python",
@@ -51,23 +53,32 @@ courses = [
     {
         "id": 1,
         "name": "Python Programming",
-        "description": "Learn Python from scratch",
+        "description": "Learn Python from scratch with hands-on projects and real-world examples",
         "duration": "30 days",
-        "price": "Free"
+        "price": "Free",
+        "instructor": "Asabeneh Yetayeh",
+        "level": "Beginner",
+        "topics": ["Variables", "Data Types", "Functions", "OOP", "File Handling"]
     },
     {
         "id": 2,
-        "name": "Web Development",
-        "description": "Build web applications with Python",
+        "name": "Web Development with Flask",
+        "description": "Build modern web applications using Flask framework",
         "duration": "45 days",
-        "price": "Free"
+        "price": "Free",
+        "instructor": "Asabeneh Yetayeh",
+        "level": "Intermediate",
+        "topics": ["Flask Basics", "Templates", "Forms", "Database", "Deployment"]
     },
     {
         "id": 3,
-        "name": "Data Science",
-        "description": "Data analysis and visualization",
+        "name": "Data Science Fundamentals",
+        "description": "Learn data analysis, visualization and machine learning with Python",
         "duration": "60 days",
-        "price": "Free"
+        "price": "Free",
+        "instructor": "Asabeneh Yetayeh",
+        "level": "Intermediate",
+        "topics": ["Pandas", "NumPy", "Matplotlib", "Scikit-learn", "Data Cleaning"]
     }
 ]
 
@@ -75,18 +86,35 @@ posts = [
     {
         "id": 1,
         "title": "Getting Started with Python",
-        "content": "Python is a powerful programming language...",
-        "author": "John Doe",
+        "content": "Python is a powerful, versatile programming language that's perfect for beginners and experts alike. In this post, we'll explore the basics of Python syntax and how to set up your development environment.",
+        "excerpt": "Learn the fundamentals of Python programming and set up your development environment.",
+        "author": "Asabeneh Yetayeh",
         "date": "2024-01-15",
-        "tags": ["python", "beginners", "programming"]
+        "tags": ["python", "beginners", "programming"],
+        "read_time": "5 min",
+        "category": "Tutorial"
     },
     {
         "id": 2,
-        "title": "Flask Web Development",
-        "content": "Flask is a micro web framework for Python...",
-        "author": "Jane Smith",
+        "title": "Building Your First Flask Application",
+        "content": "Flask is a lightweight web framework that makes it easy to build web applications in Python. We'll walk through creating a simple web app from scratch.",
+        "excerpt": "Step-by-step guide to creating your first web application with Flask.",
+        "author": "Asabeneh Yetayeh",
         "date": "2024-01-20",
-        "tags": ["flask", "web", "python"]
+        "tags": ["flask", "web", "python", "tutorial"],
+        "read_time": "8 min",
+        "category": "Web Development"
+    },
+    {
+        "id": 3,
+        "title": "Data Analysis with Pandas",
+        "content": "Pandas is the most popular data manipulation library in Python. Learn how to load, clean, and analyze data efficiently.",
+        "excerpt": "Master data manipulation and analysis using the Pandas library.",
+        "author": "Asabeneh Yetayeh",
+        "date": "2024-01-25",
+        "tags": ["pandas", "data analysis", "python"],
+        "read_time": "10 min",
+        "category": "Data Science"
     }
 ]
 
@@ -138,35 +166,98 @@ def posts_page():
                          count=len(posts),
                          timestamp=datetime.now())
 
-# Your existing template routes
-@app.route('/text-analyzer')
+# Text Analyzer with actual functionality
+@app.route('/text-analyzer', methods=['GET', 'POST'])
 def text_analyzer():
-    """Text analyzer page"""
+    """Text analyzer page with actual analysis functionality"""
+    analysis_result = None
+    
+    if request.method == 'POST':
+        text = request.form.get('text', '')
+        if text:
+            # Perform text analysis
+            analysis_result = analyze_text(text)
+    
     return render_template('text_analyzer.html',
                          title='Text Analyzer',
+                         analysis_result=analysis_result,
                          timestamp=datetime.now())
 
+def analyze_text(text):
+    """Analyze text and return statistics"""
+    # Remove extra whitespace
+    text = text.strip()
+    
+    # Basic statistics
+    char_count = len(text)
+    word_count = len(text.split())
+    line_count = len(text.splitlines())
+    
+    # Remove punctuation for word analysis
+    clean_text = re.sub(r'[^\w\s]', '', text)
+    words = clean_text.lower().split()
+    
+    # Word frequency
+    word_freq = Counter(words)
+    most_common_words = word_freq.most_common(5)
+    
+    # Sentence count (rough estimate)
+    sentence_count = len(re.split(r'[.!?]+', text))
+    
+    # Average word length
+    avg_word_length = sum(len(word) for word in words) / len(words) if words else 0
+    
+    # Reading time estimate (200 words per minute)
+    reading_time = word_count / 200 if word_count > 0 else 0
+    
+    return {
+        'char_count': char_count,
+        'word_count': word_count,
+        'line_count': line_count,
+        'sentence_count': sentence_count,
+        'most_common_words': most_common_words,
+        'avg_word_length': round(avg_word_length, 2),
+        'reading_time': round(reading_time, 1),
+        'unique_words': len(set(words))
+    }
+
+# Feedback system with actual functionality
 @app.route('/feedbacks', methods=['GET', 'POST'])
 def feedbacks_page():
-    """Feedbacks page"""
+    """Feedbacks page with actual form processing"""
+    message = None
+    message_type = None
+    
     if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        message = request.form.get('message')
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+        message_text = request.form.get('message', '').strip()
         
-        if name and email and message:
-            feedback = {
-                'id': len(feedbacks) + 1,
-                'name': name,
-                'email': email,
-                'message': message,
-                'timestamp': datetime.now().isoformat()
-            }
-            feedbacks.append(feedback)
+        if name and email and message_text:
+            # Basic email validation
+            if '@' in email and '.' in email:
+                feedback = {
+                    'id': len(feedbacks) + 1,
+                    'name': name,
+                    'email': email,
+                    'message': message_text,
+                    'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+                feedbacks.append(feedback)
+                message = "Thank you for your feedback! It has been submitted successfully."
+                message_type = "success"
+            else:
+                message = "Please enter a valid email address."
+                message_type = "error"
+        else:
+            message = "Please fill in all required fields."
+            message_type = "error"
     
     return render_template('feedbacks.html',
                          title='Feedback',
                          feedbacks=feedbacks,
+                         message=message,
+                         message_type=message_type,
                          timestamp=datetime.now())
 
 # API Routes (JSON endpoints)

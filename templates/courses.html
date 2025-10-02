@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .course-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            transition: transform 0.2s;
+        }
+        .course-card:hover {
+            transform: translateY(-5px);
+        }
+        .topic-tag {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 3px 10px;
+            margin: 3px;
+            border-radius: 15px;
+            font-size: 0.8em;
+        }
+        .level-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .level-beginner { background: #28a745; color: white; }
+        .level-intermediate { background: #ffc107; color: black; }
+        .level-advanced { background: #dc3545; color: white; }
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .nav a {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background 0.3s;
+            text-decoration: none;
+        }
+        .nav a:hover {
+            background: #764ba2;
+        }
+        .price {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📚 Courses</h1>
+        <p>Total: {{ count }} courses available</p>
+    </div>
+
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/api">API Docs</a>
+        <a href="/students">Students</a>
+        <a href="/courses">Courses</a>
+        <a href="/posts">Posts</a>
+        <a href="/text-analyzer">Text Analyzer</a>
+        <a href="/feedbacks">Feedback</a>
+    </div>
+
+    <div class="card">
+        <h2>Available Courses</h2>
+        <p>Browse our collection of free Python courses designed for all skill levels.</p>
+        
+        <div class="course-grid">
+            {% for course in courses %}
+            <div class="course-card">
+                <h3>{{ course.name }}</h3>
+                <p><strong>Instructor:</strong> {{ course.instructor }}</p>
+                <p><strong>Level:</strong> 
+                    <span class="level-badge level-{{ course.level.lower() }}">{{ course.level }}</span>
+                </p>
+                <p><strong>Duration:</strong> {{ course.duration }}</p>
+                <p class="price">💰 {{ course.price }}</p>
+                <p>{{ course.description }}</p>
+                
+                <p><strong>Topics Covered:</strong></p>
+                <div>
+                    {% for topic in course.topics %}
+                    <span class="topic-tag">{{ topic }}</span>
+                    {% endfor %}
+                </div>
+                
+                <p style="margin-top: 15px;">
+                    <a href="/api/courses/{{ course.id }}">View JSON Data</a>
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

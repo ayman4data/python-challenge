@@ -121,7 +121,8 @@ posts = [
 # Store feedbacks in memory (in production, use a database)
 feedbacks = []
 
-# Template Routes
+# ========== TEMPLATE ROUTES ==========
+
 @app.route('/')
 def home():
     """Home page with HTML template"""
@@ -141,11 +142,24 @@ def api_docs():
 
 @app.route('/students')
 def students_page():
-    """Students page with HTML template"""
+    """Students page with HTML template and filtering"""
+    filtered_students = students.copy()
+    
+    # Get filter parameters
+    country = request.args.get('country')
+    city = request.args.get('city')
+    
+    # Apply filters
+    if country:
+        filtered_students = [s for s in filtered_students if s['country'].lower() == country.lower()]
+    
+    if city:
+        filtered_students = [s for s in filtered_students if s['city'].lower() == city.lower()]
+    
     return render_template('students.html',
                          title='Students',
-                         students=students,
-                         count=len(students),
+                         students=filtered_students,
+                         count=len(filtered_students),
                          timestamp=datetime.now())
 
 @app.route('/courses')
@@ -166,7 +180,6 @@ def posts_page():
                          count=len(posts),
                          timestamp=datetime.now())
 
-# Text Analyzer with actual functionality
 @app.route('/text-analyzer', methods=['GET', 'POST'])
 def text_analyzer():
     """Text analyzer page with actual analysis functionality"""
@@ -183,45 +196,6 @@ def text_analyzer():
                          analysis_result=analysis_result,
                          timestamp=datetime.now())
 
-def analyze_text(text):
-    """Analyze text and return statistics"""
-    # Remove extra whitespace
-    text = text.strip()
-    
-    # Basic statistics
-    char_count = len(text)
-    word_count = len(text.split())
-    line_count = len(text.splitlines())
-    
-    # Remove punctuation for word analysis
-    clean_text = re.sub(r'[^\w\s]', '', text)
-    words = clean_text.lower().split()
-    
-    # Word frequency
-    word_freq = Counter(words)
-    most_common_words = word_freq.most_common(5)
-    
-    # Sentence count (rough estimate)
-    sentence_count = len(re.split(r'[.!?]+', text))
-    
-    # Average word length
-    avg_word_length = sum(len(word) for word in words) / len(words) if words else 0
-    
-    # Reading time estimate (200 words per minute)
-    reading_time = word_count / 200 if word_count > 0 else 0
-    
-    return {
-        'char_count': char_count,
-        'word_count': word_count,
-        'line_count': line_count,
-        'sentence_count': sentence_count,
-        'most_common_words': most_common_words,
-        'avg_word_length': round(avg_word_length, 2),
-        'reading_time': round(reading_time, 1),
-        'unique_words': len(set(words))
-    }
-
-# Feedback system with actual functionality
 @app.route('/feedbacks', methods=['GET', 'POST'])
 def feedbacks_page():
     """Feedbacks page with actual form processing"""
@@ -260,7 +234,8 @@ def feedbacks_page():
                          message_type=message_type,
                          timestamp=datetime.now())
 
-# API Routes (JSON endpoints)
+# ========== API ROUTES ==========
+
 @app.route('/api/info')
 def api_info():
     """API information endpoint (JSON)"""
@@ -276,7 +251,7 @@ def api_info():
     })
 
 @app.route('/api/students', methods=['GET'])
-def get_students():
+def get_students_api():
     """Get all students (JSON)"""
     filtered_students = students.copy()
     
@@ -294,31 +269,23 @@ def get_students():
         "timestamp": datetime.now().isoformat()
     })
 
-@app.route('/students')
-def students_page():
-    """Students page with HTML template and filtering"""
-    filtered_students = students.copy()
-    
-    # Get filter parameters
-    country = request.args.get('country')
-    city = request.args.get('city')
-    
-    # Apply filters
-    if country:
-        filtered_students = [s for s in filtered_students if s['country'].lower() == country.lower()]
-    
-    if city:
-        filtered_students = [s for s in filtered_students if s['city'].lower() == city.lower()]
-    
-    return render_template('students.html',
-                         title='Students',
-                         students=filtered_students,
-                         count=len(filtered_students),
-                         timestamp=datetime.now()
-        )
+@app.route('/api/students/<int:student_id>', methods=['GET'])
+def get_student_api(student_id):
+    """Get a specific student by ID (JSON)"""
+    student = next((s for s in students if s['id'] == student_id), None)
+    if student:
+        return jsonify({
+            "student": student,
+            "timestamp": datetime.now().isoformat()
+        })
+    else:
+        return jsonify({
+            "error": "Student not found",
+            "timestamp": datetime.now().isoformat()
+        }), 404
 
 @app.route('/api/courses', methods=['GET'])
-def get_courses():
+def get_courses_api():
     """Get all courses (JSON)"""
     return jsonify({
         "courses": courses,
@@ -327,7 +294,7 @@ def get_courses():
     })
 
 @app.route('/api/courses/<int:course_id>', methods=['GET'])
-def get_course(course_id):
+def get_course_api(course_id):
     """Get a specific course by ID (JSON)"""
     course = next((c for c in courses if c['id'] == course_id), None)
     if course:
@@ -342,7 +309,7 @@ def get_course(course_id):
         }), 404
 
 @app.route('/api/posts', methods=['GET'])
-def get_posts():
+def get_posts_api():
     """Get all blog posts (JSON)"""
     return jsonify({
         "posts": posts,
@@ -351,7 +318,7 @@ def get_posts():
     })
 
 @app.route('/api/posts/<int:post_id>', methods=['GET'])
-def get_post(post_id):
+def get_post_api(post_id):
     """Get a specific post by ID (JSON)"""
     post = next((p for p in posts if p['id'] == post_id), None)
     if post:
@@ -423,7 +390,48 @@ def get_stats():
         "timestamp": datetime.now().isoformat()
     })
 
-# Error handlers
+# ========== HELPER FUNCTIONS ==========
+
+def analyze_text(text):
+    """Analyze text and return statistics"""
+    # Remove extra whitespace
+    text = text.strip()
+    
+    # Basic statistics
+    char_count = len(text)
+    word_count = len(text.split())
+    line_count = len(text.splitlines())
+    
+    # Remove punctuation for word analysis
+    clean_text = re.sub(r'[^\w\s]', '', text)
+    words = clean_text.lower().split()
+    
+    # Word frequency
+    word_freq = Counter(words)
+    most_common_words = word_freq.most_common(5)
+    
+    # Sentence count (rough estimate)
+    sentence_count = len(re.split(r'[.!?]+', text))
+    
+    # Average word length
+    avg_word_length = sum(len(word) for word in words) / len(words) if words else 0
+    
+    # Reading time estimate (200 words per minute)
+    reading_time = word_count / 200 if word_count > 0 else 0
+    
+    return {
+        'char_count': char_count,
+        'word_count': word_count,
+        'line_count': line_count,
+        'sentence_count': sentence_count,
+        'most_common_words': most_common_words,
+        'avg_word_length': round(avg_word_length, 2),
+        'reading_time': round(reading_time, 1),
+        'unique_words': len(set(words))
+    }
+
+# ========== ERROR HANDLERS ==========
+
 @app.errorhandler(404)
 def not_found(error):
     if request.path.startswith('/api/'):

@@ -315,7 +315,7 @@ def students_page():
                          students=filtered_students,
                          count=len(filtered_students),
                          timestamp=datetime.now()
-        ), 404
+        )
 
 @app.route('/api/courses', methods=['GET'])
 def get_courses():

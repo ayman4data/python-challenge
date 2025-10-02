@@ -294,19 +294,27 @@ def get_students():
         "timestamp": datetime.now().isoformat()
     })
 
-@app.route('/api/students/<int:student_id>', methods=['GET'])
-def get_student(student_id):
-    """Get a specific student by ID (JSON)"""
-    student = next((s for s in students if s['id'] == student_id), None)
-    if student:
-        return jsonify({
-            "student": student,
-            "timestamp": datetime.now().isoformat()
-        })
-    else:
-        return jsonify({
-            "error": "Student not found",
-            "timestamp": datetime.now().isoformat()
+@app.route('/students')
+def students_page():
+    """Students page with HTML template and filtering"""
+    filtered_students = students.copy()
+    
+    # Get filter parameters
+    country = request.args.get('country')
+    city = request.args.get('city')
+    
+    # Apply filters
+    if country:
+        filtered_students = [s for s in filtered_students if s['country'].lower() == country.lower()]
+    
+    if city:
+        filtered_students = [s for s in filtered_students if s['city'].lower() == city.lower()]
+    
+    return render_template('students.html',
+                         title='Students',
+                         students=filtered_students,
+                         count=len(filtered_students),
+                         timestamp=datetime.now())
         }), 404
 
 @app.route('/api/courses', methods=['GET'])

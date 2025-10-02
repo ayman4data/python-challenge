@@ -22,37 +22,42 @@
         }
         .card {
             background: white;
-            padding: 20px;
-            margin: 15px 0;
+            padding: 30px;
+            margin: 20px 0;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         .student-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
             margin-top: 20px;
         }
         .student-card {
             background: #f8f9fa;
-            padding: 20px;
+            padding: 25px;
             border-radius: 8px;
             border-left: 4px solid #667eea;
+            transition: transform 0.2s;
+        }
+        .student-card:hover {
+            transform: translateY(-5px);
         }
         .skill-tag {
             display: inline-block;
             background: #667eea;
             color: white;
-            padding: 2px 8px;
-            margin: 2px;
-            border-radius: 12px;
+            padding: 3px 10px;
+            margin: 3px;
+            border-radius: 15px;
             font-size: 0.8em;
         }
         .nav {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
             margin: 20px 0;
+            flex-wrap: wrap;
         }
         .nav a {
             background: #667eea;
@@ -60,17 +65,74 @@
             padding: 10px 20px;
             border-radius: 5px;
             transition: background 0.3s;
+            text-decoration: none;
         }
         .nav a:hover {
             background: #764ba2;
+        }
+        .country-flag {
+            font-size: 1.2em;
+            margin-right: 5px;
+        }
+        .filter-section {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .filter-form {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .filter-group select, .filter-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .filter-btn {
+            background: #28a745;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .filter-btn:hover {
+            background: #218838;
+        }
+        .reset-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
             text-decoration: none;
+            display: inline-block;
+        }
+        .reset-btn:hover {
+            background: #545b62;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>👨‍🎓 Students</h1>
-        <p>Total: {{ count }} students</p>
+        <p>Total: {{ count }} students from around the world</p>
     </div>
 
     <div class="nav">
@@ -84,33 +146,88 @@
     </div>
 
     <div class="card">
-        <h2>Student List</h2>
-        <div class="student-grid">
-            {% if students and students is iterable %}
-                {% for student in students %}
-            <div class="student-card">
-                <h3>{{ student.name }}</h3>
-                <p><strong>📍 Location:</strong> {{ student.city }}, {{ student.country }}</p>
-                <p><strong>🆔 ID:</strong> {{ student.id }}</p>
-                <p><strong>💻 Skills:</strong></p>
-<!-- In the student-grid section -->
-                <div class="student-grid">
-                    {% if students and students is iterable %}
-                        {% for student in students %}
-                        <div class="student-card">
-                            <!-- student content -->
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <p>No students found</p>
-                    {% endif %}
+        <div class="filter-section">
+            <h3>🔍 Filter Students</h3>
+            <form class="filter-form" action="/students" method="GET">
+                <div class="filter-group">
+                    <label for="country">Country</label>
+                    <select id="country" name="country">
+                        <option value="">All Countries</option>
+                        <option value="Finland">Finland</option>
+                        <option value="Sweden">Sweden</option>
+                        <option value="Norway">Norway</option>
+                    </select>
                 </div>
-                <p style="margin-top: 10px;">
-                    <a href="/api/students/{{ student.id }}">View JSON</a>
-                </p>
-            </div>
-            {% endfor %}
+                <div class="filter-group">
+                    <label for="city">City</label>
+                    <input type="text" id="city" name="city" placeholder="Enter city name">
+                </div>
+                <div class="filter-group">
+                    <button type="submit" class="filter-btn">Apply Filters</button>
+                    <a href="/students" class="reset-btn">Reset</a>
+                </div>
+            </form>
         </div>
+
+        <h2>Student Directory</h2>
+        
+        {% if students and students is iterable and students|length > 0 %}
+            <div class="student-grid">
+                {% for student in students %}
+                <div class="student-card">
+                    <h3>{{ student.name }}</h3>
+                    <p>
+                        <span class="country-flag">📍</span>
+                        <strong>Location:</strong> {{ student.city }}, {{ student.country }}
+                    </p>
+                    <p><strong>🆔 ID:</strong> {{ student.id }}</p>
+                    <p><strong>💻 Skills:</strong></p>
+                    <div>
+                        {% if student.skills and student.skills is iterable %}
+                            {% for skill in student.skills %}
+                            <span class="skill-tag">{{ skill }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="skill-tag">No skills listed</span>
+                        {% endif %}
+                    </div>
+                    <p style="margin-top: 15px;">
+                        <a href="/api/students/{{ student.id }}" target="_blank">View JSON Data</a>
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px;">
+                <h3>No students found</h3>
+                <p>Try adjusting your filters or check back later.</p>
+            </div>
+        {% endif %}
     </div>
+
+    <div class="card">
+        <h3>API Access</h3>
+        <p>You can also access student data via our API:</p>
+        <ul>
+            <li><code>GET /api/students</code> - Get all students</li>
+            <li><code>GET /api/students/1</code> - Get specific student by ID</li>
+            <li><code>GET /api/students?country=Finland</code> - Filter by country</li>
+            <li><code>GET /api/students?city=Helsinki</code> - Filter by city</li>
+        </ul>
+    </div>
+
+    <script>
+        // Set the selected country in the filter dropdown
+        const urlParams = new URLSearchParams(window.location.search);
+        const country = urlParams.get('country');
+        const city = urlParams.get('city');
+        
+        if (country) {
+            document.getElementById('country').value = country;
+        }
+        if (city) {
+            document.getElementById('city').value = city;
+        }
+    </script>
 </body>
 </html>

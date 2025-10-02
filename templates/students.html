@@ -93,13 +93,17 @@
                 <p><strong>📍 Location:</strong> {{ student.city }}, {{ student.country }}</p>
                 <p><strong>🆔 ID:</strong> {{ student.id }}</p>
                 <p><strong>💻 Skills:</strong></p>
-                <div>
-                    {% for skill in student.skills %}
-                    <span class="skill-tag">{{ skill }}</span>
-                    {% endfor %}
-                {% else %}
-                    <p>No students found</p>
-                {% endif %}
+<!-- In the student-grid section -->
+                <div class="student-grid">
+                    {% if students and students is iterable %}
+                        {% for student in students %}
+                        <div class="student-card">
+                            <!-- student content -->
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No students found</p>
+                    {% endif %}
                 </div>
                 <p style="margin-top: 10px;">
                     <a href="/api/students/{{ student.id }}">View JSON</a>

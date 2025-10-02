@@ -86,7 +86,8 @@
     <div class="card">
         <h2>Student List</h2>
         <div class="student-grid">
-            {% for student in students %}
+            {% if students and students is iterable %}
+                {% for student in students %}
             <div class="student-card">
                 <h3>{{ student.name }}</h3>
                 <p><strong>📍 Location:</strong> {{ student.city }}, {{ student.country }}</p>
@@ -96,6 +97,9 @@
                     {% for skill in student.skills %}
                     <span class="skill-tag">{{ skill }}</span>
                     {% endfor %}
+                {% else %}
+                    <p>No students found</p>
+                {% endif %}
                 </div>
                 <p style="margin-top: 10px;">
                     <a href="/api/students/{{ student.id }}">View JSON</a>

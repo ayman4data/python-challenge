@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>📚 Students Management</h2>
+<p>Add new students and view all registered students.</p>
+
+<div style="margin-top: 30px;">
+    <h3>Add New Student</h3>
+    <form id="studentForm" onsubmit="addStudent(event)">
+        <input type="text" id="name" placeholder="Full Name" required>
+        <input type="date" id="dob" placeholder="Date of Birth" required>
+        <input type="text" id="country" placeholder="Country" required>
+        <input type="text" id="city" placeholder="City" required>
+        <input type="text" id="skills" placeholder="Skills (comma separated)" required>
+        <textarea id="bio" rows="3" placeholder="Bio" required></textarea>
+        <button type="submit" class="btn">Add Student</button>
+    </form>
+</div>
+
+<div style="margin-top: 40px;">
+    <h3>All Students</h3>
+    <button class="btn" onclick="loadStudents()">Load Students</button>
+    <div id="studentsList" style="margin-top: 20px;"></div>
+</div>
+
+<script>
+async function addStudent(event) {
+    event.preventDefault();
+    
+    const studentData = {
+        name: document.getElementById('name').value,
+        dob: document.getElementById('dob').value,
+        country: document.getElementById('country').value,
+        city: document.getElementById('city').value,
+        skills: document.getElementById('skills').value.split(',').map(s => s.trim()),
+        bio: document.getElementById('bio').value
+    };
+
+    try {
+        const response = await fetch('/api/students', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(studentData)
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Student added successfully!');
+            document.getElementById('studentForm').reset();
+            loadStudents();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to add student'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+async function loadStudents() {
+    try {
+        const response = await fetch('/api/students');
+        const students = await response.json();
+        
+        const listDiv = document.getElementById('studentsList');
+        
+        if (students.length === 0) {
+            listDiv.innerHTML = '<p style="color: #666;">No students registered yet.</p>';
+            return;
+        }
+        
+        let html = '<div style="display: grid; gap: 20px;">';
+        students.forEach(student => {
+            html += `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea;">
+                    <h4 style="color: #667eea; margin-bottom: 10px;">${student.name}</h4>
+                    <p><strong>ID:</strong> ${student.id}</p>
+                    <p><strong>Date of Birth:</strong> ${student.dob}</p>
+                    <p><strong>Location:</strong> ${student.city}, ${student.country}</p>
+                    <p><strong>Skills:</strong> ${Array.isArray(student.skills) ? student.skills.join(', ') : student.skills}</p>
+                    <p><strong>Bio:</strong> ${student.bio}</p>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        listDiv.innerHTML = html;
+    } catch (error) {
+        alert('Error loading students: ' + error.message);
+    }
+}
+
+// Load students on page load
+window.onload = loadStudents;
+</script>
+{% endblock %}

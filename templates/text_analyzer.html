@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>📊 Text Analyzer</h2>
+<p>Enter your text below to analyze word count, character count, and most frequent words.</p>
+
+<div style="margin-top: 30px;">
+    <textarea id="textInput" rows="10" placeholder="Enter your text here..."></textarea>
+    <button class="btn" onclick="analyzeText()">Analyze Text</button>
+</div>
+
+<div id="result" style="display: none;" class="result">
+    <h3>Analysis Results:</h3>
+    <div id="resultContent"></div>
+</div>
+
+<script>
+async function analyzeText() {
+    const text = document.getElementById('textInput').value;
+    
+    if (!text.trim()) {
+        alert('Please enter some text to analyze');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/text/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: text })
+        });
+
+        const data = await response.json();
+        
+        let resultHTML = `
+            <p><strong>Characters Count:</strong> ${data.characters_count}</p>
+            <p><strong>Words Count:</strong> ${data.words_count}</p>
+            <h4>Most Common Words:</h4>
+            <ul>
+        `;
+        
+        data.most_common_words.forEach(([word, count]) => {
+            resultHTML += `<li><strong>${word}</strong>: ${count} times</li>`;
+        });
+        
+        resultHTML += '</ul>';
+        
+        document.getElementById('resultContent').innerHTML = resultHTML;
+        document.getElementById('result').style.display = 'block';
+    } catch (error) {
+        alert('Error analyzing text: ' + error.message);
+    }
+}
+</script>
+{% endblock %}

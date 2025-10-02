@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>💬 Feedbacks</h2>
+<p>Share your feedback about the 30 Days of Python challenge!</p>
+
+<div style="margin-top: 30px;">
+    <h3>Submit Feedback</h3>
+    <form id="feedbackForm" onsubmit="addFeedback(event)">
+        <input type="text" id="name" placeholder="Your Name" required>
+        <textarea id="message" rows="5" placeholder="Your feedback message..." required></textarea>
+        <button type="submit" class="btn">Submit Feedback</button>
+    </form>
+</div>
+
+<div style="margin-top: 40px;">
+    <h3>All Feedbacks</h3>
+    <button class="btn" onclick="loadFeedbacks()">Load Feedbacks</button>
+    <div id="feedbacksList" style="margin-top: 20px;"></div>
+</div>
+
+<script>
+async function addFeedback(event) {
+    event.preventDefault();
+    
+    const feedbackData = {
+        name: document.getElementById('name').value,
+        message: document.getElementById('message').value
+    };
+
+    try {
+        const response = await fetch('/api/feedbacks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(feedbackData)
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Feedback submitted successfully!');
+            document.getElementById('feedbackForm').reset();
+            loadFeedbacks();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to submit feedback'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+async function loadFeedbacks() {
+    try {
+        const response = await fetch('/api/feedbacks');
+        const feedbacks = await response.json();
+        
+        const listDiv = document.getElementById('feedbacksList');
+        
+        if (feedbacks.length === 0) {
+            listDiv.innerHTML = '<p style="color: #666;">No feedbacks yet. Be the first to share!</p>';
+            return;
+        }
+        
+        let html = '<div style="display: grid; gap: 20px;">';
+        feedbacks.forEach(feedback => {
+            html += `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 4px solid #764ba2;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="color: #764ba2;">${feedback.name}</h4>
+                        <span style="color: #666; font-size: 14px;">ID: ${feedback.id}</span>
+                    </div>
+                    <p style="color: #555;">${feedback.message}</p>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        listDiv.innerHTML = html;
+    } catch (error) {
+        alert('Error loading feedbacks: ' + error.message);
+    }
+}
+
+// Load feedbacks on page load
+window.onload = loadFeedbacks;
+</script>
+{% endblock %}

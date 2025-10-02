@@ -311,7 +311,7 @@ def students_page():
         filtered_students = [s for s in filtered_students if s['city'].lower() == city.lower()]
     
     return render_template({'students.html',
-                         title='Students',
+                         title='students',
                          students=filtered_students,
                          count=len(filtered_students),
                          timestamp=datetime.now()

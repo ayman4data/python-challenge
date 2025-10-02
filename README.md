@@ -84,7 +84,7 @@ python-challenge/
    ```
 
 5. **Visit the application**
-   - Open http://localhost:5000 in your browser
+   - Open https://python-challenge-a0qs.onrender.com in your browser
 
 ## 🌐 API Usage Examples
 

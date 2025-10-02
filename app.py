@@ -310,11 +310,11 @@ def students_page():
     if city:
         filtered_students = [s for s in filtered_students if s['city'].lower() == city.lower()]
     
-    return render_template('students.html',
+    return render_template({'students.html',
                          title='Students',
                          students=filtered_students,
                          count=len(filtered_students),
-                         timestamp=datetime.now())
+                         timestamp=datetime.now()
         }), 404
 
 @app.route('/api/courses', methods=['GET'])

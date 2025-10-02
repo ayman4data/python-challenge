@@ -1,98 +1,108 @@
-{% extends "base.html" %}
-
-{% block content %}
-<h2>📚 Students Management</h2>
-<p>Add new students and view all registered students.</p>
-
-<div style="margin-top: 30px;">
-    <h3>Add New Student</h3>
-    <form id="studentForm" onsubmit="addStudent(event)">
-        <input type="text" id="name" placeholder="Full Name" required>
-        <input type="date" id="dob" placeholder="Date of Birth" required>
-        <input type="text" id="country" placeholder="Country" required>
-        <input type="text" id="city" placeholder="City" required>
-        <input type="text" id="skills" placeholder="Skills (comma separated)" required>
-        <textarea id="bio" rows="3" placeholder="Bio" required></textarea>
-        <button type="submit" class="btn">Add Student</button>
-    </form>
-</div>
-
-<div style="margin-top: 40px;">
-    <h3>All Students</h3>
-    <button class="btn" onclick="loadStudents()">Load Students</button>
-    <div id="studentsList" style="margin-top: 20px;"></div>
-</div>
-
-<script>
-async function addStudent(event) {
-    event.preventDefault();
-    
-    const studentData = {
-        name: document.getElementById('name').value,
-        dob: document.getElementById('dob').value,
-        country: document.getElementById('country').value,
-        city: document.getElementById('city').value,
-        skills: document.getElementById('skills').value.split(',').map(s => s.trim()),
-        bio: document.getElementById('bio').value
-    };
-
-    try {
-        const response = await fetch('/api/students', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(studentData)
-        });
-
-        const data = await response.json();
-        
-        if (response.ok) {
-            alert('Student added successfully!');
-            document.getElementById('studentForm').reset();
-            loadStudents();
-        } else {
-            alert('Error: ' + (data.error || 'Failed to add student'));
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
         }
-    } catch (error) {
-        alert('Error: ' + error.message);
-    }
-}
-
-async function loadStudents() {
-    try {
-        const response = await fetch('/api/students');
-        const students = await response.json();
-        
-        const listDiv = document.getElementById('studentsList');
-        
-        if (students.length === 0) {
-            listDiv.innerHTML = '<p style="color: #666;">No students registered yet.</p>';
-            return;
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
         }
-        
-        let html = '<div style="display: grid; gap: 20px;">';
-        students.forEach(student => {
-            html += `
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea;">
-                    <h4 style="color: #667eea; margin-bottom: 10px;">${student.name}</h4>
-                    <p><strong>ID:</strong> ${student.id}</p>
-                    <p><strong>Date of Birth:</strong> ${student.dob}</p>
-                    <p><strong>Location:</strong> ${student.city}, ${student.country}</p>
-                    <p><strong>Skills:</strong> ${Array.isArray(student.skills) ? student.skills.join(', ') : student.skills}</p>
-                    <p><strong>Bio:</strong> ${student.bio}</p>
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .student-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .skill-tag {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            margin: 2px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .nav a {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .nav a:hover {
+            background: #764ba2;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👨‍🎓 Students</h1>
+        <p>Total: {{ count }} students</p>
+    </div>
+
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/api">API Docs</a>
+        <a href="/students">Students</a>
+        <a href="/courses">Courses</a>
+        <a href="/posts">Posts</a>
+        <a href="/text-analyzer">Text Analyzer</a>
+        <a href="/feedbacks">Feedback</a>
+    </div>
+
+    <div class="card">
+        <h2>Student List</h2>
+        <div class="student-grid">
+            {% for student in students %}
+            <div class="student-card">
+                <h3>{{ student.name }}</h3>
+                <p><strong>📍 Location:</strong> {{ student.city }}, {{ student.country }}</p>
+                <p><strong>🆔 ID:</strong> {{ student.id }}</p>
+                <p><strong>💻 Skills:</strong></p>
+                <div>
+                    {% for skill in student.skills %}
+                    <span class="skill-tag">{{ skill }}</span>
+                    {% endfor %}
                 </div>
-            `;
-        });
-        html += '</div>';
-        
-        listDiv.innerHTML = html;
-    } catch (error) {
-        alert('Error loading students: ' + error.message);
-    }
-}
-
-// Load students on page load
-window.onload = loadStudents;
-</script>
-{% endblock %}
+                <p style="margin-top: 10px;">
+                    <a href="/api/students/{{ student.id }}">View JSON</a>
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

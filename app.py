@@ -1,11 +1,11 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import json
 import os
 from datetime import datetime
 
 app = Flask(__name__)
 
-# Sample data
+# Sample data (same as before)
 sample_data = {
     "name": "Thirty Days of Python Challenge",
     "description": "A 30-day programming challenge to learn Python",
@@ -17,11 +17,12 @@ sample_data = {
         "api_info": "/api",
         "students": "/api/students",
         "courses": "/api/courses",
-        "posts": "/api/posts"
+        "posts": "/api/posts",
+        "text_analyzer": "/text-analyzer",
+        "feedback": "/feedbacks"
     }
 }
 
-# Sample students data
 students = [
     {
         "id": 1,
@@ -46,7 +47,6 @@ students = [
     }
 ]
 
-# Sample courses data
 courses = [
     {
         "id": 1,
@@ -71,7 +71,6 @@ courses = [
     }
 ]
 
-# Sample posts data
 posts = [
     {
         "id": 1,
@@ -91,20 +90,89 @@ posts = [
     }
 ]
 
+# Store feedbacks in memory (in production, use a database)
+feedbacks = []
+
+# Template Routes
 @app.route('/')
 def home():
-    """Home endpoint with API information"""
-    return jsonify({
-        "message": "Welcome to Thirty Days of Python API",
-        "version": sample_data["version"],
-        "description": sample_data["description"],
-        "endpoints": sample_data["endpoints"],
-        "timestamp": datetime.now().isoformat()
-    })
+    """Home page with HTML template"""
+    return render_template('index.html', 
+                         title='30 Days of Python Challenge',
+                         data=sample_data,
+                         timestamp=datetime.now())
 
 @app.route('/api')
+def api_docs():
+    """API documentation page"""
+    return render_template('api.html',
+                         title='API Documentation',
+                         data=sample_data,
+                         endpoints=sample_data['endpoints'],
+                         timestamp=datetime.now())
+
+@app.route('/students')
+def students_page():
+    """Students page with HTML template"""
+    return render_template('students.html',
+                         title='Students',
+                         students=students,
+                         count=len(students),
+                         timestamp=datetime.now())
+
+@app.route('/courses')
+def courses_page():
+    """Courses page with HTML template"""
+    return render_template('courses.html',
+                         title='Courses',
+                         courses=courses,
+                         count=len(courses),
+                         timestamp=datetime.now())
+
+@app.route('/posts')
+def posts_page():
+    """Posts page with HTML template"""
+    return render_template('posts.html',
+                         title='Blog Posts',
+                         posts=posts,
+                         count=len(posts),
+                         timestamp=datetime.now())
+
+# Your existing template routes
+@app.route('/text-analyzer')
+def text_analyzer():
+    """Text analyzer page"""
+    return render_template('text_analyzer.html',
+                         title='Text Analyzer',
+                         timestamp=datetime.now())
+
+@app.route('/feedbacks', methods=['GET', 'POST'])
+def feedbacks_page():
+    """Feedbacks page"""
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        message = request.form.get('message')
+        
+        if name and email and message:
+            feedback = {
+                'id': len(feedbacks) + 1,
+                'name': name,
+                'email': email,
+                'message': message,
+                'timestamp': datetime.now().isoformat()
+            }
+            feedbacks.append(feedback)
+    
+    return render_template('feedbacks.html',
+                         title='Feedback',
+                         feedbacks=feedbacks,
+                         timestamp=datetime.now())
+
+# API Routes (JSON endpoints)
+@app.route('/api/info')
 def api_info():
-    """API information endpoint"""
+    """API information endpoint (JSON)"""
     return jsonify({
         "name": sample_data["name"],
         "version": sample_data["version"],
@@ -118,16 +186,13 @@ def api_info():
 
 @app.route('/api/students', methods=['GET'])
 def get_students():
-    """Get all students or filter by query parameters"""
-    # Filtering capability
+    """Get all students (JSON)"""
     filtered_students = students.copy()
     
-    # Filter by country if provided
     country = request.args.get('country')
     if country:
         filtered_students = [s for s in filtered_students if s['country'].lower() == country.lower()]
     
-    # Filter by city if provided
     city = request.args.get('city')
     if city:
         filtered_students = [s for s in filtered_students if s['city'].lower() == city.lower()]
@@ -140,7 +205,7 @@ def get_students():
 
 @app.route('/api/students/<int:student_id>', methods=['GET'])
 def get_student(student_id):
-    """Get a specific student by ID"""
+    """Get a specific student by ID (JSON)"""
     student = next((s for s in students if s['id'] == student_id), None)
     if student:
         return jsonify({
@@ -155,7 +220,7 @@ def get_student(student_id):
 
 @app.route('/api/courses', methods=['GET'])
 def get_courses():
-    """Get all courses"""
+    """Get all courses (JSON)"""
     return jsonify({
         "courses": courses,
         "count": len(courses),
@@ -164,7 +229,7 @@ def get_courses():
 
 @app.route('/api/courses/<int:course_id>', methods=['GET'])
 def get_course(course_id):
-    """Get a specific course by ID"""
+    """Get a specific course by ID (JSON)"""
     course = next((c for c in courses if c['id'] == course_id), None)
     if course:
         return jsonify({
@@ -179,7 +244,7 @@ def get_course(course_id):
 
 @app.route('/api/posts', methods=['GET'])
 def get_posts():
-    """Get all blog posts"""
+    """Get all blog posts (JSON)"""
     return jsonify({
         "posts": posts,
         "count": len(posts),
@@ -188,7 +253,7 @@ def get_posts():
 
 @app.route('/api/posts/<int:post_id>', methods=['GET'])
 def get_post(post_id):
-    """Get a specific post by ID"""
+    """Get a specific post by ID (JSON)"""
     post = next((p for p in posts if p['id'] == post_id), None)
     if post:
         return jsonify({
@@ -201,14 +266,58 @@ def get_post(post_id):
             "timestamp": datetime.now().isoformat()
         }), 404
 
+@app.route('/api/feedbacks', methods=['GET', 'POST'])
+def api_feedbacks():
+    """API endpoint for feedbacks"""
+    if request.method == 'POST':
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "error": "No JSON data provided",
+                "timestamp": datetime.now().isoformat()
+            }), 400
+        
+        name = data.get('name')
+        email = data.get('email')
+        message = data.get('message')
+        
+        if not all([name, email, message]):
+            return jsonify({
+                "error": "Missing required fields: name, email, message",
+                "timestamp": datetime.now().isoformat()
+            }), 400
+        
+        feedback = {
+            'id': len(feedbacks) + 1,
+            'name': name,
+            'email': email,
+            'message': message,
+            'timestamp': datetime.now().isoformat()
+        }
+        feedbacks.append(feedback)
+        
+        return jsonify({
+            "message": "Feedback submitted successfully",
+            "feedback": feedback,
+            "timestamp": datetime.now().isoformat()
+        }), 201
+    
+    # GET request
+    return jsonify({
+        "feedbacks": feedbacks,
+        "count": len(feedbacks),
+        "timestamp": datetime.now().isoformat()
+    })
+
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
-    """Get API statistics"""
+    """Get API statistics (JSON)"""
     return jsonify({
         "statistics": {
             "total_students": len(students),
             "total_courses": len(courses),
             "total_posts": len(posts),
+            "total_feedbacks": len(feedbacks),
             "countries": list(set(student['country'] for student in students)),
             "cities": list(set(student['city'] for student in students))
         },
@@ -218,19 +327,23 @@ def get_stats():
 # Error handlers
 @app.errorhandler(404)
 def not_found(error):
-    return jsonify({
-        "error": "Endpoint not found",
-        "message": "The requested endpoint does not exist",
-        "timestamp": datetime.now().isoformat()
-    }), 404
+    if request.path.startswith('/api/'):
+        return jsonify({
+            "error": "Endpoint not found",
+            "message": "The requested API endpoint does not exist",
+            "timestamp": datetime.now().isoformat()
+        }), 404
+    return render_template('404.html', title='Page Not Found'), 404
 
 @app.errorhandler(500)
 def internal_error(error):
-    return jsonify({
-        "error": "Internal server error",
-        "message": "Something went wrong on our side",
-        "timestamp": datetime.now().isoformat()
-    }), 500
+    if request.path.startswith('/api/'):
+        return jsonify({
+            "error": "Internal server error",
+            "message": "Something went wrong on our side",
+            "timestamp": datetime.now().isoformat()
+        }), 500
+    return render_template('500.html', title='Server Error'), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

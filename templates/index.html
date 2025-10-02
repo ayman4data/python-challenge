@@ -1,51 +1,108 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div style="text-align: center;">
-    <h2>Welcome to 30 Days Of Python API</h2>
-    <p style="font-size: 18px; color: #666; margin: 20px 0;">
-        This application cleans texts and analyzes the number of words, characters, 
-        and most frequent words in the text. Check it out by clicking <strong>Text Analyzer</strong> in the menu.
-    </p>
-    
-    <div style="margin: 40px 0;">
-        <h3>Technologies Used:</h3>
-        <div style="display: flex; justify-content: space-around; margin-top: 30px; flex-wrap: wrap;">
-            <div style="padding: 20px;">
-                <h4 style="color: #667eea;">Frontend</h4>
-                <ul style="list-style: none; margin-top: 10px;">
-                    <li>✓ HTML</li>
-                    <li>✓ CSS</li>
-                    <li>✓ JavaScript</li>
-                </ul>
-            </div>
-            <div style="padding: 20px;">
-                <h4 style="color: #667eea;">Backend</h4>
-                <ul style="list-style: none; margin-top: 10px;">
-                    <li>✓ Python</li>
-                    <li>✓ Flask</li>
-                    <li>✓ REST API</li>
-                </ul>
-            </div>
-        </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .endpoints {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .endpoint-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .nav a {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .nav a:hover {
+            background: #764ba2;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 {{ data.name }}</h1>
+        <p>{{ data.description }}</p>
+        <p><strong>Version:</strong> {{ data.version }}</p>
     </div>
 
-    <div style="margin-top: 40px;">
-        <h3>Available Features:</h3>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
-                <h4>📚 Students Management</h4>
-                <p>Add and view student records with details</p>
-            </div>
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
-                <h4>💬 Feedbacks</h4>
-                <p>Submit and view feedback messages</p>
-            </div>
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
-                <h4>📊 Text Analyzer</h4>
-                <p>Analyze text statistics and word frequency</p>
-            </div>
-        </div>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/api">API Docs</a>
+        <a href="/students">Students</a>
+        <a href="/courses">Courses</a>
+        <a href="/posts">Posts</a>
+        <a href="/text-analyzer">Text Analyzer</a>
+        <a href="/feedbacks">Feedback</a>
     </div>
-</div>
-{% endblock %}
+
+    <div class="card">
+        <h2>📖 About This API</h2>
+        <p>This is a RESTful API built with Flask for the Thirty Days of Python Challenge. It provides various endpoints to access data about students, courses, and blog posts.</p>
+        
+        <h3>🔗 Available Endpoints</h3>
+        <div class="endpoints">
+            {% for name, endpoint in data.endpoints.items() %}
+            <div class="endpoint-card">
+                <strong>{{ name|title }}:</strong> 
+                <a href="{{ endpoint }}">{{ endpoint }}</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h3>🛠️ Technical Details</h3>
+        <ul>
+            <li><strong>Framework:</strong> Flask</li>
+            <li><strong>Author:</strong> {{ data.author }}</li>
+            <li><strong>GitHub:</strong> <a href="{{ data.github }}" target="_blank">{{ data.github }}</a></li>
+            <li><strong>Last Updated:</strong> {{ timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</li>
+        </ul>
+    </div>
+</body>
+</html>

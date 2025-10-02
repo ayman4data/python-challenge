@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, render_template, request
 from routes.students import students_bp
-from routes.feedback import feedbacks_bp
+from routes.feedbacks import feedbacks_bp
 from routes.text import text_bp
 
 app = Flask(__name__)
